@@ -1,0 +1,32 @@
+<div className="translation-explainer">
+
+<p className="eyebrow">What is interface translation?</p>
+
+### Different systems can use different codes for the same clinical meaning.
+
+An interface translation rule converts a value used by the sending LIS into the
+corresponding value expected by the receiving EHR. Here, the LIS sends `CH` and
+`CL`, while the EHR recognizes `HH` and `LL`. The result value is not changed—only
+the coded interpretation that travels with it.
+
+<p className="role-note">
+  An LIS analyst or interface specialist typically configures and tests this
+  rule. A laboratory director reviews the clinical meaning, confirms that the
+  test set is adequate, and participates in approval according to local
+  change-control policy.
+</p>
+
+</div>
+
+<div className="exercise-steps">
+
+<p className="eyebrow">Your task</p>
+
+1. **Choose the translation.** Map each LIS critical flag to the EHR code with
+   the same meaning.
+2. **Run the regression tests.** Check both critical flags and make sure routine
+   flags still behave correctly.
+3. **Review before approval.** A safe fix must pass the complete validation
+   set—not only the original potassium case.
+
+</div>
