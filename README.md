@@ -50,3 +50,5 @@ The output is written to `pages-dist/`.
 
 Commits to `main` run `.github/workflows/pages.yml` and deploy the static build
 to GitHub Pages.
+
+Published lesson: <https://amromeo.github.io/follow-the-flag/>
