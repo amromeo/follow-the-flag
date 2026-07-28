@@ -159,6 +159,9 @@ export default function Home() {
       note: "Qualitative abnormal result",
     },
   ];
+  const passedRegressionCases = regressionCases.filter(
+    (testCase) => testCase.received === testCase.expected,
+  ).length;
 
   const messageFields = useMemo(
     () => [
@@ -797,7 +800,11 @@ export default function Home() {
           <article className="test-console" aria-live="polite">
             <div className="artifact-header">
               <span>Validation set</span>
-              <strong>{testsRun ? (repairComplete ? "5 / 5 passed" : "3 / 5 passed") : "Not run"}</strong>
+              <strong>
+                {testsRun
+                  ? `${passedRegressionCases} / ${regressionCases.length} passed`
+                  : "Not run"}
+              </strong>
             </div>
             <div className="test-table" role="table" aria-label="Flag mapping regression tests">
               <div className="test-row test-header" role="row">
