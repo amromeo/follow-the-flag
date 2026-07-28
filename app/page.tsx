@@ -935,7 +935,7 @@ export default function Home() {
         <div className="closing-statement">
           <span>Key insight</span>
           <strong>
-            Correct data is not enough. Its meaning must survive the journey.
+            The lab director's job isn't done when the result is produced. It has to be delivered intact as well.
           </strong>
         </div>
       </section>
