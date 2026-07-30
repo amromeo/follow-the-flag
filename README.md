@@ -5,14 +5,13 @@ whose abnormal-result flag loses its meaning between the LIS and EHR.
 
 ## Edit the lesson text
 
-The interface-translation teaching copy is in:
+The learner-facing teaching copy is split into clearly named Markdown/MDX files
+in [`content/`](content/). Start with
+[`content/README.md`](content/README.md), which maps each lesson section to its
+editable file and explains which parts are safe to change.
 
-```text
-content/repair-lab.mdx
-```
-
-Open that file on GitHub, select the pencil icon, edit the Markdown, and commit
-the change to `main`. GitHub Actions will rebuild and publish the lesson
+Open a content file on GitHub, select the pencil icon, edit the Markdown, and
+commit the change to `main`. GitHub Actions will rebuild and publish the lesson
 automatically.
 
 MDX supports ordinary Markdown:
@@ -26,8 +25,8 @@ Normal paragraph text with **bold emphasis** and codes such as `CH`.
 2. Second instruction
 ```
 
-Keep the existing wrapper `<div>` elements and their `className` values because
-they connect the editable copy to the visual design.
+Structured text used by system cards, HL7 field explanations, answer choices,
+and regression tests is in `content/lesson-data.ts`.
 
 ## Local development
 
@@ -48,7 +47,7 @@ The output is written to `pages-dist/`.
 
 ## Deployment
 
-Commits to `main` run `.github/workflows/pages.yml` and deploy the static build
+Commits to `main` run `.github/workflows/publish.yml` and deploy the static build
 to GitHub Pages.
 
 Published lesson: <https://amromeo.github.io/follow-the-flag/>

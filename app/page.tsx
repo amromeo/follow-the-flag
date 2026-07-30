@@ -1,110 +1,25 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import DecisionContent from "../content/decision.mdx";
+import HeroContent from "../content/hero.mdx";
+import InvestigationContent from "../content/investigation.mdx";
+import {
+  answerChoices,
+  baseRegressionCases,
+  hl7Segments,
+  messageFields,
+  systems,
+  type SystemKey,
+} from "../content/lesson-data";
+import MessageLabContent from "../content/message-lab.mdx";
+import RepairDebriefContent from "../content/repair-debrief.mdx";
+import RepairIntroContent from "../content/repair-intro.mdx";
 import RepairLabContent from "../content/repair-lab.mdx";
+import TakeawaysContent from "../content/takeaways.mdx";
 
 type Theme = "clinical" | "interface";
-type SystemKey = "analyzer" | "middleware" | "lis" | "interface" | "ehr";
 type ResultTab = "details" | "message" | "history";
-
-const systems: Array<{
-  key: SystemKey;
-  label: string;
-  eyebrow: string;
-  title: string;
-  observation: string;
-  artifact: Array<[string, string]>;
-  flag: string;
-  status: "expected" | "changed" | "warning";
-}> = [
-  {
-    key: "analyzer",
-    label: "Analyzer",
-    eyebrow: "01 · Measurement",
-    title: "The analyzer produces the result.",
-    observation:
-      "The potassium measurement is complete. The analyzer identifies it as above the analytical range and sends its local high flag downstream.",
-    artifact: [
-      ["Result", "6.8 mmol/L"],
-      ["Analyzer flag", "H"],
-      ["Hemolysis index", "12 · acceptable"],
-      ["Result status", "Final"],
-    ],
-    flag: "H",
-    status: "expected",
-  },
-  {
-    key: "middleware",
-    label: "Middleware",
-    eyebrow: "02 · Rules",
-    title: "Middleware recognizes a critical value.",
-    observation:
-      "The result passes quality and interference checks. A local rule identifies 6.8 mmol/L as critical high and assigns the laboratory’s internal flag.",
-    artifact: [
-      ["Input flag", "H"],
-      ["Critical threshold", "≥ 6.5 mmol/L"],
-      ["Local severity", "CH"],
-      ["Disposition", "Send to LIS"],
-    ],
-    flag: "CH",
-    status: "changed",
-  },
-  {
-    key: "lis",
-    label: "LIS",
-    eyebrow: "03 · Laboratory record",
-    title: "The LIS understands the local flag.",
-    observation:
-      "In the LIS, CH is configured as “Critical High.” The result is correctly highlighted and enters the laboratory’s critical-result workflow.",
-    artifact: [
-      ["Display", "6.8 mmol/L"],
-      ["Stored flag", "CH"],
-      ["LIS interpretation", "Critical High"],
-      ["Outbound status", "Final"],
-    ],
-    flag: "CH",
-    status: "expected",
-  },
-  {
-    key: "interface",
-    label: "Interface",
-    eyebrow: "04 · Translation",
-    title: "The message passes—but the meaning does not.",
-    observation:
-      "The interface transmits the message successfully. No rule translates the local CH value to a critical-high code understood by the receiving EHR.",
-    artifact: [
-      ["Message status", "ACK · accepted"],
-      ["OBX-5 · value", "6.8"],
-      ["OBX-6 · units", "mmol/L"],
-      ["OBX-8 · abnormal flag", "CH"],
-    ],
-    flag: "CH",
-    status: "warning",
-  },
-  {
-    key: "ehr",
-    label: "EHR",
-    eyebrow: "05 · Clinical display",
-    title: "The EHR displays a generic blue flag.",
-    observation:
-      "The numerical result is visible, but the EHR does not recognize CH. It renders a generic blue flag instead of the familiar two red arrows used for other critical-high results.",
-    artifact: [
-      ["Displayed value", "6.8 mmol/L"],
-      ["Received flag", "CH"],
-      ["Recognized values", "N · L · H · LL · HH"],
-      ["Rendered flag", "Blue flag"],
-    ],
-    flag: "⚑",
-    status: "warning",
-  },
-];
-
-const hl7Segments = [
-  ["MSH", "Sending and receiving applications"],
-  ["PID", "Patient identification"],
-  ["OBR", "The potassium order"],
-  ["OBX", "The potassium observation"],
-];
 
 export default function Home() {
   const [theme, setTheme] = useState<Theme>("clinical");
@@ -123,20 +38,7 @@ export default function Home() {
   const repairComplete = criticalHighMap === "HH" && criticalLowMap === "LL";
 
   const regressionCases = [
-    {
-      name: "Normal",
-      source: "N",
-      expected: "N",
-      received: "N",
-      note: "Routine result",
-    },
-    {
-      name: "High",
-      source: "H",
-      expected: "H",
-      received: "H",
-      note: "Above reference interval",
-    },
+    ...baseRegressionCases.slice(0, 2),
     {
       name: "Critical high",
       source: "CH",
@@ -151,95 +53,12 @@ export default function Home() {
       received: criticalLowMap,
       note: "Potassium 2.1 mmol/L",
     },
-    {
-      name: "Abnormal text",
-      source: "A",
-      expected: "A",
-      received: "A",
-      note: "Qualitative abnormal result",
-    },
+    ...baseRegressionCases.slice(2),
   ];
   const passedRegressionCases = regressionCases.filter(
     (testCase) => testCase.received === testCase.expected,
   ).length;
 
-  const messageFields = useMemo(
-    () => [
-      {
-        field: "OBX-1",
-        name: "Set ID",
-        value: "1",
-        purpose:
-          "Numbers the OBX segment within this group of observations. It helps distinguish repeated OBX segments that belong to the same order.",
-        example:
-          "The value 1 means this is the first observation segment associated with the potassium order.",
-      },
-      {
-        field: "OBX-2",
-        name: "Value type",
-        value: "NM",
-        purpose:
-          "Declares the data type carried in OBX-5, telling the receiver how the result value should be parsed.",
-        example:
-          "NM means numeric. The EHR should interpret 6.8 as a number rather than free text.",
-      },
-      {
-        field: "OBX-3",
-        name: "Observation identifier",
-        value: "K^Potassium",
-        purpose:
-          "Identifies what was measured. It commonly carries a code plus a human-readable test name and may also identify the coding system.",
-        example:
-          "K is the local test code and Potassium is its display text. The caret separates components inside the field.",
-      },
-      {
-        field: "OBX-5",
-        name: "Observation value",
-        value: "6.8",
-        purpose:
-          "Carries the actual result. Its meaning depends on the observation identifier, value type, units and surrounding context.",
-        example:
-          "The measured potassium result is 6.8. By itself, the number does not say what was measured or which units apply.",
-      },
-      {
-        field: "OBX-6",
-        name: "Units",
-        value: "mmol/L",
-        purpose:
-          "States the units for the observation value so that the receiving system can display and interpret the number correctly.",
-        example:
-          "The value 6.8 is expressed in millimoles per liter. A missing or incorrect unit could change its clinical meaning.",
-      },
-      {
-        field: "OBX-7",
-        name: "Reference range",
-        value: "3.5-5.0",
-        purpose:
-          "Provides the reference interval supplied by the sending system. The field can also carry nonnumeric or textual ranges.",
-        example:
-          "The sender provides 3.5–5.0 as context for interpreting this potassium result.",
-      },
-      {
-        field: "OBX-8",
-        name: "Interpretation flag",
-        value: "CH",
-        purpose:
-          "Carries an interpretation such as normal, high, low or critical. Sender and receiver must share—or translate—the same flag vocabulary.",
-        example:
-          "The LIS uses CH for critical high. The EHR does not define CH, so it renders a generic blue flag instead of its familiar critical-high arrows.",
-      },
-      {
-        field: "OBX-11",
-        name: "Result status",
-        value: "F",
-        purpose:
-          "Indicates the result’s lifecycle state, such as preliminary, final or corrected. Receivers use it to decide whether and how to update an existing result.",
-        example:
-          "F means final. A later corrected result would require an appropriate status so the EHR does not treat it as an unrelated duplicate.",
-      },
-    ],
-    [],
-  );
   const selectedFieldInfo =
     messageFields.find((item) => item.field === selectedField) ?? messageFields[0];
 
@@ -292,17 +111,7 @@ export default function Home() {
 
       <section className="hero" id="case">
         <div className="hero-copy">
-          <p className="eyebrow">Clinical informatics case 01</p>
-          <h1>Follow the Flag</h1>
-          <p className="hero-lede">
-            A critical potassium result reached the EHR—but its warning did not.
-          </p>
-          <p className="hero-description">
-            A clinician notices that potassium carries a generic blue flag while
-            neighboring critical-high results show the familiar two red arrows.
-            It looks like a display quirk. Trace the result across five systems
-            and decide whether the inconsistency reveals a deeper problem.
-          </p>
+          <HeroContent />
           <button className="primary-button" type="button" onClick={beginInvestigation}>
             {started ? "Continue the investigation" : "Begin the investigation"}
             <span aria-hidden="true">→</span>
@@ -415,14 +224,7 @@ export default function Home() {
 
       <section className="investigation-section" id="investigation">
         <div className="section-intro">
-          <div>
-            <p className="eyebrow">The investigation</p>
-            <h2>One result. Five representations.</h2>
-          </div>
-          <p>
-            Select each system to compare what it received, understood and sent.
-            The numerical result never changes—but watch the flag.
-          </p>
+          <InvestigationContent />
         </div>
 
         <div className="system-rail investigation-rail" role="tablist" aria-label="Systems">
@@ -519,59 +321,7 @@ export default function Home() {
       </section>
 
       <section className="message-lab" id="message-lab">
-        <div className="section-intro">
-          <div>
-            <p className="eyebrow">Message lab</p>
-            <h2>Find the meaning inside the message.</h2>
-          </div>
-          <p>
-            HL7 v2 messages are structured text used to exchange clinical events.
-            Each line is a segment; pipes divide fields; carets divide components
-            within a field. Select an OBX field to see what it is meant to carry.
-          </p>
-        </div>
-
-        <div className="hl7-primer">
-          <div className="primer-copy">
-            <p className="eyebrow">HL7 v2 in 60 seconds</p>
-            <h3>Meaning comes from position.</h3>
-            <p>
-              An HL7 message is not a visual report. It is a sequence of named
-              segments arranged for a particular event. This <code>ORU^R01</code>
-              message communicates an observation result.
-            </p>
-          </div>
-          <div className="primer-model" aria-label="How an HL7 message is organized">
-            <div>
-              <strong>Message</strong>
-              <span>One clinical event</span>
-              <code>ORU^R01</code>
-            </div>
-            <span aria-hidden="true">›</span>
-            <div>
-              <strong>Segments</strong>
-              <span>One line each</span>
-              <code>MSH · PID · OBR · OBX</code>
-            </div>
-            <span aria-hidden="true">›</span>
-            <div>
-              <strong>Fields</strong>
-              <span>Separated by pipes</span>
-              <code>OBX|1|NM|…</code>
-            </div>
-            <span aria-hidden="true">›</span>
-            <div>
-              <strong>Components</strong>
-              <span>Separated by carets</span>
-              <code>K^Potassium</code>
-            </div>
-          </div>
-          <p className="primer-note">
-            A receiver does not infer meaning from appearance: it interprets each
-            value according to the segment, field position, data type and agreed
-            code set.
-          </p>
-        </div>
+        <MessageLabContent />
 
         <div className="message-workspace">
           <article className="hl7-panel">
@@ -638,32 +388,10 @@ export default function Home() {
 
       <section className="decision-section" id="decision">
         <div className="decision-copy">
-          <p className="eyebrow">Your conclusion</p>
-          <h2>Where should the team intervene?</h2>
-          <p>
-            The value is accurate, the message was accepted and the LIS
-            correctly recognized the result as critical. Choose the best
-            explanation.
-          </p>
+          <DecisionContent />
         </div>
         <div className="answer-grid" role="radiogroup" aria-label="Choose the best explanation">
-          {[
-            [
-              "analyzer",
-              "Replace the analyzer",
-              "The analyzer produced an inaccurate potassium result.",
-            ],
-            [
-              "mapping",
-              "Repair the flag mapping",
-              "Translate or standardize the local critical flag across the interface boundary.",
-            ],
-            [
-              "display",
-              "Train clinicians to ignore it",
-              "The unfamiliar symbol is cosmetic and does not require a system change.",
-            ],
-          ].map(([id, title, detail]) => (
+          {answerChoices.map(([id, title, detail]) => (
             <button
               key={id}
               type="button"
@@ -692,15 +420,7 @@ export default function Home() {
 
       <section className="repair-section" id="repair-lab">
         <div className="section-intro">
-          <div>
-            <p className="eyebrow">Repair lab</p>
-            <h2>Translate the flags—then try to break your fix.</h2>
-          </div>
-          <p>
-            You found the mismatch. Now translate the sending system&apos;s
-            vocabulary into values the receiving system understands, then test
-            the change before it is approved.
-          </p>
+          <RepairIntroContent />
         </div>
 
         <div className="translation-brief">
@@ -865,79 +585,12 @@ export default function Home() {
         </div>
 
         <div className="validation-debrief">
-          <div>
-            <span>Why test both directions?</span>
-            <p>
-              Repairing the potassium 6.8 case alone could leave critical-low
-              results broken. Validation should cover the full meaning set, not
-              merely reproduce the reported incident.
-            </p>
-          </div>
-          <div>
-            <span>Why retest ordinary flags?</span>
-            <p>
-              A narrowly written transformation can unintentionally alter
-              normal, high or qualitative abnormal results that previously
-              worked.
-            </p>
-          </div>
-          <div>
-            <span>What comes after passing?</span>
-            <p>
-              Document the change, retain evidence, confirm downstream display
-              and monitor the interface after release.
-            </p>
-          </div>
+          <RepairDebriefContent />
         </div>
       </section>
 
       <section className="concepts-section" id="concepts">
-        <div className="section-intro">
-          <div>
-            <p className="eyebrow">Takeaways</p>
-            <h2>What this case teaches</h2>
-          </div>
-        </div>
-        <div className="concept-grid">
-          <article>
-            <span>01</span>
-            <h3>Transmission</h3>
-            <p>
-              A message can arrive successfully and still fail to communicate
-              the intended clinical meaning.
-            </p>
-          </article>
-          <article>
-            <span>02</span>
-            <h3>Representation</h3>
-            <p>
-              Local codes and flags require an explicit shared interpretation
-              when data crosses a system boundary.
-            </p>
-          </article>
-          <article>
-            <span>03</span>
-            <h3>Validation</h3>
-            <p>
-              Interface testing should include normal, abnormal, critical and
-              corrected results—not only ordinary high and low values.
-            </p>
-          </article>
-          <article>
-            <span>04</span>
-            <h3>Acknowledgment</h3>
-            <p>
-              An ACK establishes that a message was received. It does not prove
-              that every field was interpreted or displayed correctly.
-            </p>
-          </article>
-        </div>
-        <div className="closing-statement">
-          <span>Key insight</span>
-          <strong>
-            The lab director's job isn't done when the result is produced. It has to be delivered intact as well.
-          </strong>
-        </div>
+        <TakeawaysContent />
       </section>
 
       <footer>

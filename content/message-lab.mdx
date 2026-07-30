@@ -1,0 +1,52 @@
+<div className="section-intro">
+  <div>
+    <p className="eyebrow">Message lab</p>
+    <h2>Find the meaning inside the message.</h2>
+  </div>
+  <p>
+    HL7 v2 messages are structured text used to exchange clinical events. Each
+    line is a segment; pipes divide fields; carets divide components within a
+    field. Select an OBX field to see what it is meant to carry.
+  </p>
+</div>
+
+<div className="hl7-primer">
+  <div className="primer-copy">
+    <p className="eyebrow">HL7 v2 in 60 seconds</p>
+    <h3>Meaning comes from position.</h3>
+    <p>
+      An HL7 message is not a visual report. It is a sequence of named segments
+      arranged for a particular event. This <code>ORU^R01</code> message
+      communicates an observation result.
+    </p>
+  </div>
+  <div className="primer-model" aria-label="How an HL7 message is organized">
+    <div>
+      <strong>Message</strong>
+      <span>One clinical event</span>
+      <code>ORU^R01</code>
+    </div>
+    <span aria-hidden="true">›</span>
+    <div>
+      <strong>Segments</strong>
+      <span>One line each</span>
+      <code>MSH · PID · OBR · OBX</code>
+    </div>
+    <span aria-hidden="true">›</span>
+    <div>
+      <strong>Fields</strong>
+      <span>Separated by pipes</span>
+      <code>OBX|1|NM|…</code>
+    </div>
+    <span aria-hidden="true">›</span>
+    <div>
+      <strong>Components</strong>
+      <span>Separated by carets</span>
+      <code>K^Potassium</code>
+    </div>
+  </div>
+  <p className="primer-note">
+    A receiver does not infer meaning from appearance: it interprets each value
+    according to the segment, field position, data type and agreed code set.
+  </p>
+</div>
